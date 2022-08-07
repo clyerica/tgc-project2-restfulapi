@@ -1,0 +1,20 @@
+{
+   "_id" : 1,
+    "title" : "Veggie laksa",
+    "ingredients" : [],
+    "course" : ["lunch", "dinner"],
+    "cuisine": "chinese",
+    "diet":["vegetarian","halal"],
+    "serves" : 2,
+    "method":"",
+    "reviews":[{
+        "_id":1,
+        "rating":5,
+        "comment":"Great recipe"
+        },
+        {
+            "_id":2,
+        "rating":3,
+        "comment":"Too much salt!"
+        }]
+}

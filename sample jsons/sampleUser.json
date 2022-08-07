@@ -1,0 +1,7 @@
+{
+    "_id":1,
+    "username":"user1",
+    "email":"user@gmail.com",
+    "password":"rotiprata123",
+    "reviews":[{},{}]
+}
