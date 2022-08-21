@@ -3,18 +3,15 @@ const cors = require("cors");
 require("dotenv").config();
 const ObjectId = require("mongodb").ObjectId;
 const MongoUtil = require("./MongoUtil");
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const e = require("express");
 
 const MONGO_URI = process.env.MONGO_URI;
 
 let app = express();
-
-// !! Enable processing JSON data
 app.use(express.json());
-// !! Enable CORS
 app.use(cors());
 
-// SETUP END
 async function main() {
     const db = await MongoUtil.connect(MONGO_URI, "tgc_project2");
     console.log("Connected to database");
@@ -22,19 +19,17 @@ async function main() {
         res.send("hello world")
     })
 
-    app.get('/recipes/find/:id', async function(req,res){
-        let id=req.params.id
-        const searchRecipe=await db.collection('recipes').findOne({'_id': ObjectId(`${id}`)})
-        if(searchRecipe){
-            displayRecipe=searchRecipe.toArray()
+
+    app.get('/recipes/find/:id', async function (req, res) {
+        try {
+            let id = req.params.id
+            const recipeRecord = await db.collection('recipes').find({ '_id': ObjectId(`${id}`) }).toArray()
             res.status(200)
-            res.send(displayRecipe)
+            res.json(recipeRecord)
+        } catch (e) {
+            res.status(400)
+            res.json({ "mesage": "Error - Please check recipe id and try again" })
         }
-        else{
-            res.status(404)
-            res.json({"message":"No record found"})
-        }
-        
     })
 
     // user signup  
@@ -139,10 +134,43 @@ async function main() {
             "diet": req.body.diet,
             "serves": req.body.serves,
             "method": req.body.method,
-            "user_id":req.user.user_id
+            "user_id": req.user.user_id
         })
-        res.status(201); 
+        res.status(201);
         res.send(result);
+    })
+
+    //delete recipe
+    app.get('/recipes/delete/:id', checkIfAuthenticatedJWT, async function (req, res) {
+        let id = req.params.id
+        const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) })
+        res.send(recipeRecord)
+    })
+
+    app.post('/recipes/delete/:id', checkIfAuthenticatedJWT, async function (req, res) {
+        try {
+            let id = req.params.id
+            let loginUserID=req.user.user_id
+            const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) })
+            if (loginUserID == recipeRecord.user_id) {
+                await db.collection('recipes').deleteOne({ '_id': ObjectId(id) })
+                res.status(200)
+                res.json({
+                    "message": "Recipe deleted!"
+                })
+            }
+            else {
+                res.status(401)
+                res.json({
+                    "message": "Unauthorised - you are not the owner of this recipe"
+                })
+            }
+        } catch (e) {
+            res.status(400);
+            res.json({
+                "message": "Error - Unable to delete this recipe"
+            })
+        }
     })
 }
 
