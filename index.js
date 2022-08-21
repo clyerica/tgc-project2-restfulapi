@@ -195,6 +195,58 @@ async function main() {
 
     })
 
+    //update recipe
+    app.put('/recipes/:id', checkIfAuthenticatedJWT, async function (req, res) {
+        try {
+            let id = req.params.id;
+            let loginUserID = req.user.user_id;
+            const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) });
+            if (loginUserID == recipeRecord.user_id) {
+                let updates = {};
+                if (req.body.title) {
+                    updates['title'] = req.body.title
+                }
+                if (req.body.ingredients) {
+                    updates['ingredients'] = req.body.ingredients
+                }
+                if (req.body.course) {
+                    updates['course'] = req.body.course
+                }
+                if (req.body.cuisine) {
+                    updates['cuisine'] = req.body.cuisine
+                }
+                if (req.body.diet) {
+                    updates['diet'] = req.body.diet
+                }
+                if (req.body.serves) {
+                    updates['serves'] = req.body.serves
+                }
+                if (req.body.method) {
+                    updates['method'] = req.body.method
+                }
+                let results = await db.collection('recipes').updateOne({
+                    '_id': ObjectId(req.params.id)
+                }, {
+                    '$set': updates
+                });
+                res.status(200);
+                res.json(results);
+            }
+            else {
+                res.status(401);
+                res.json({
+                    "message": "Unauthorised - you are not the owner of this recipe"
+                });
+            }
+        } catch (e) {
+            res.status(400);
+            res.json({
+                "message": "Error - Unable to edit this recipe"
+            });
+        }
+
+    })
+
     //delete recipe
     app.post('/recipes/delete/:id', checkIfAuthenticatedJWT, async function (req, res) {
         try {
