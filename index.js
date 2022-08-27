@@ -5,6 +5,7 @@ const ObjectId = require("mongodb").ObjectId;
 const MongoUtil = require("./MongoUtil");
 const jwt = require('jsonwebtoken');
 const e = require("express");
+const getUpdates = require("./getUpdates")
 
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -144,7 +145,7 @@ async function main() {
         }
     })
 
-    //middleware to check authentication
+    // middleware to check authentication
     const checkIfAuthenticatedJWT = (req, res, next) => {
         const authHeader = req.headers.authorization;
         if (authHeader) {
@@ -262,13 +263,7 @@ async function main() {
                         "message": message
                     });
                 } else {
-                    let updates = {};
-                    let fields = ["title", "ingredients", "course", "cuisine", "diet", "serves", "method"];
-                    fields.map(function (e) {
-                        if (req.body[e]) {
-                            return updates[e] = req.body[e];
-                        }
-                    });
+                    let updates = getUpdates.updates(["title", "ingredients", "course", "cuisine", "diet", "serves", "method"], "",req);
                     let results = await db.collection('recipes').updateOne({
                         '_id': ObjectId(req.params.id)
                     }, {
@@ -408,13 +403,7 @@ async function main() {
                     "message": message
                 });
             } else {
-                let updates = {};
-                let fields = ['title', 'rating', 'content'];
-                fields.map(function (e) {
-                    if (req.body[e]) {
-                        return updates['reviews.$.' + e] = req.body[e];
-                    }
-                });
+                let updates = getUpdates.updates(['title', 'rating', 'content'], "reviews.$.",req);
                 let result = await db.collection('recipes').updateOne({
                     '_id': ObjectId(recipe_id),
                     'reviews._id': ObjectId(review_id)
@@ -445,7 +434,7 @@ async function main() {
                 '$pull': {
                     'reviews': {
                         '_id': ObjectId(review_id),
-                        'user._id':loginUserID
+                        'user._id': loginUserID
                     }
                 }
             });
