@@ -17,7 +17,9 @@ async function main() {
     const db = await MongoUtil.connect(MONGO_URI, "tgc_project2");
     console.log("Connected to database");
     app.get('/', function (req, res) {
-        res.send("hello world");
+        res.json({
+            message:"Hello world! Come look at recipes!"
+        });
     })
 
     //search all
