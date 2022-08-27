@@ -46,30 +46,30 @@ async function main() {
             if (req.query.title) {
                 criteria['title'] = {
                     '$regex': req.query.title, '$options': 'i'
-                }
+                };
             }
             if (req.query.course) {
                 let course = req.query.course.split(" ")
                 criteria['course'] = {
                     '$in': course
-                }
+                };
             }
             if (req.query.cuisine) {
                 criteria['cuisine'] = {
                     '$regex': req.query.cuisine, '$options': 'i'
-                }
+                };
             }
             if (req.query.diet) {
-                let diet = req.query.diet.split(" ")
+                let diet = req.query.diet.split(" ");
                 criteria['diet'] = {
                     '$all': [diet]
-                }
+                };
             }
             if (req.query.serves) {
-                serves = parseInt(req.query.serves)
+                serves = parseInt(req.query.serves);
                 criteria['serves'] = {
                     '$gte': serves
-                }
+                };
             }
             let results = await db.collection('recipes').find(criteria, { projection: { title: 1, diet: 1, serves: 1 } }).toArray();
             res.status(200);
@@ -77,7 +77,7 @@ async function main() {
         } catch (e) {
             res.json({
                 "message": "Error - could not find results"
-            })
+            });
         }
     })
 
@@ -87,7 +87,7 @@ async function main() {
         let password = req.body.password;
         let user = await db.collection('users').findOne({
             'email': req.body.email
-        })
+        });
         if (user) {
             res.status(400);
             res.json({
@@ -98,10 +98,10 @@ async function main() {
             message = "";
             if (!email.includes('@') || !email.includes('.')) {
                 message = message + "Email address is not valid. "
-            }
+            };
             if (password.length < 8) {
                 message = message + "Password must be 8 or more characters."
-            }
+            };
             res.status(400);
             res.json({
                 'message': message
@@ -135,12 +135,12 @@ async function main() {
             });
             res.json({
                 'accessToken': token
-            })
+            });
         } else {
             res.status(401);
             res.json({
                 'message': "Invalid email or password"
-            })
+            });
         }
     })
 
@@ -203,7 +203,7 @@ async function main() {
                 res.status(400);
                 res.json({
                     "message": message
-                })
+                });
             } else {
                 let result = await db.collection('recipes').insertOne({
                     "title": title,
@@ -228,13 +228,13 @@ async function main() {
     })
 
     //update recipe
-    app.put('/recipes/:id', checkIfAuthenticatedJWT, async function (req, res) {
+    app.put('/recipes/:id/update', checkIfAuthenticatedJWT, async function (req, res) {
         try {
             let id = req.params.id;
             let loginUserID = req.user.user_id;
             const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) });
             if (loginUserID == recipeRecord.user_id) {
-                let message = ""
+                let message = "";
                 if (req.body.title && req.body.title.length < 4) {
                     message = message + "Title must be at least 4 characters. ";
                 }
@@ -254,21 +254,21 @@ async function main() {
                     message = message + "Please enter a valid serving size (must be a whole number). ";
                 }
                 if (req.body.method && !Array.isArray(req.body.method)) {
-                    message = message + "Please enter recipe steps as an array."
+                    message = message + "Please enter recipe steps as an array.";
                 }
                 if (message != "") {
                     res.status(400);
                     res.json({
                         "message": message
-                    })
+                    });
                 } else {
-                    let updates = {}
-                    let fields = ["title", "ingredients", "course", "cuisine", "diet", "serves", "method"]
+                    let updates = {};
+                    let fields = ["title", "ingredients", "course", "cuisine", "diet", "serves", "method"];
                     fields.map(function (e) {
                         if (req.body[e]) {
-                            return updates[e] = req.body[e]
+                            return updates[e] = req.body[e];
                         }
-                    })
+                    });
                     let results = await db.collection('recipes').updateOne({
                         '_id': ObjectId(req.params.id)
                     }, {
@@ -293,27 +293,27 @@ async function main() {
     })
 
     //delete recipe
-    app.post('/recipes/delete/:id', checkIfAuthenticatedJWT, async function (req, res) {
+    app.post('/recipes/:id/delete', checkIfAuthenticatedJWT, async function (req, res) {
         try {
             let id = req.params.id;
             let loginUserID = req.user.user_id;
             const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) });
             if (!recipeRecord) {
-                res.status(400)
+                res.status(400);
                 res.json({
                     "message": "No recipe found"
-                })
+                });
             } else if (loginUserID == recipeRecord.user_id) {
-                await db.collection('recipes').deleteOne({ '_id': ObjectId(id) })
-                res.status(200)
+                await db.collection('recipes').deleteOne({ '_id': ObjectId(id) });
+                res.status(200);
                 res.json({
                     "message": "Recipe deleted!"
-                })
+                });
             } else {
-                res.status(401)
+                res.status(401);
                 res.json({
                     "message": "Unauthorised - you are not the owner of this recipe"
-                })
+                });
             }
         } catch (e) {
             res.status(400);
@@ -324,50 +324,52 @@ async function main() {
     })
 
     //add review of recipe
-    app.post('/recipes/:recipeid/reviews/add', checkIfAuthenticatedJWT, async function (req, res) {
+    app.post('/recipes/:recipeId/reviews/add', checkIfAuthenticatedJWT, async function (req, res) {
         try {
-            let id = req.params.recipeid;
+            let id = req.params.recipeId;
             const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) });
             if (!recipeRecord) {
-                res.status(400)
+                res.status(404);
                 res.json({
                     "message": "No recipe found"
-                })
+                });
             } else {
-                let title = req.body.title
-                let rating = parseInt(req.body.rating)
-                let content = req.body.content
-                if(title.length<3 || Number.isNaN(rating) || rating<1 || rating >5 || content.length<3){
-                    message=""
-                    if (title.length<3){
-                        message=message + "Title of review must be at least 3 characters. "
+                let title = req.body.title;
+                let rating = parseInt(req.body.rating);
+                let content = req.body.content;
+                if (title.length < 3 || Number.isNaN(rating) || rating < 1 || rating > 5 || content.length < 3) {
+                    message = "";
+                    if (title.length < 3) {
+                        message = message + "Title of review must be at least 3 characters. ";
                     }
-                    if(Number.isNaN(rating) || rating<1 || rating >5){
-                        message=message+"Please rate the recipe on a scale of 1 to 5. "
+                    if (Number.isNaN(rating) || rating < 1 || rating > 5) {
+                        message = message + "Please rate the recipe on a scale of 1 to 5. ";
                     }
-                    if(content.length<3){
-                        message=message+"Your review of the recipe must contain at least 3 characters."
+                    if (content.length < 3) {
+                        message = message + "Your review of the recipe must contain at least 3 characters.";
                     }
-                    res.status(400)
+                    res.status(400);
                     res.json({
-                        "message":message
-                    })
-                }else{
-                    let result = await db.collection('recipes').updateOne({ '_id': ObjectId(`${id}`)},
-                    {
-                        '$push': {
-                            'reviews': {
-                                '_id': ObjectId(),
-                                'title':title,
-                                'rating':rating,
-                                'content': content,
-                                'user_email':req.user.email,
-                                'user_id':req.user.user_id
+                        "message": message
+                    });
+                } else {
+                    let result = await db.collection('recipes').updateOne({ '_id': ObjectId(`${id}`) },
+                        {
+                            '$push': {
+                                'reviews': {
+                                    '_id': ObjectId(),
+                                    'title': title,
+                                    'rating': rating,
+                                    'content': content,
+                                    'user': {
+                                        '_id': req.user.user_id,
+                                        'email': req.user.email,
+                                    }
+                                }
                             }
-                        }
-                    })
-                res.status(200)
-                res.send(result)
+                        });
+                    res.status(200);
+                    res.send(result);
                 }
             }
         } catch (e) {
@@ -375,6 +377,80 @@ async function main() {
             res.json({
                 "message": "Error - Unable to add review to this recipe"
             });
+        }
+    })
+
+    //update review of recipe
+    app.put('/recipes/:recipeId/reviews/:reviewId/update', checkIfAuthenticatedJWT, async function (req, res) {
+        let recipe_id = req.params.recipeId;
+        let review_id = req.params.reviewId;
+        let loginUserID = req.user.user_id;
+        const reviewRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${recipe_id}`), 'reviews._id': ObjectId(`${review_id}`), 'reviews.user._id': loginUserID });
+        if (!reviewRecord) {
+            res.status(404);
+            res.json({
+                "message": "No review by you found for this recipe - cannot update"
+            });
+        } else {
+            message = "";
+            if (req.body.title && req.body.title.length < 3) {
+                message = message + "Title of review must be at least 3 characters. ";
+            }
+            if (req.body.rating && (Number.isNaN(parseInt(req.body.rating)) || parseInt(req.body.rating) < 1 || parseInt(req.body.rating) > 5)) {
+                message = message + "Please rate the recipe on a scale of 1 to 5. ";
+            }
+            if (req.body.content && req.body.content.length < 3) {
+                message = message + "Your review of the recipe must contain at least 3 characters.";
+            }
+            if (message != "") {
+                res.status(400);
+                res.json({
+                    "message": message
+                });
+            } else {
+                let updates = {};
+                let fields = ['title', 'rating', 'content'];
+                fields.map(function (e) {
+                    if (req.body[e]) {
+                        return updates['reviews.$.' + e] = req.body[e];
+                    }
+                });
+                let result = await db.collection('recipes').updateOne({
+                    '_id': ObjectId(recipe_id),
+                    'reviews._id': ObjectId(review_id)
+                }, {
+                    '$set': updates
+                })
+                res.status(200);
+                res.send(result)
+            }
+        }
+    })
+
+    //delete recipe review
+    app.post("/recipes/:recipeId/reviews/:reviewId/delete", checkIfAuthenticatedJWT, async function (req, res) {
+        let recipe_id = req.params.recipeId;
+        let review_id = req.params.reviewId;
+        let loginUserID = req.user.user_id;
+        const reviewRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${recipe_id}`), 'reviews._id': ObjectId(`${review_id}`), 'reviews.user._id': loginUserID });
+        if (!reviewRecord) {
+            res.status(404);
+            res.json({
+                "message": "No review by you found for this recipe - cannot delete"
+            });
+        } else {
+            let results = await db.collection('recipes').updateOne({
+                '_id': ObjectId(recipe_id)
+            }, {
+                '$pull': {
+                    'reviews': {
+                        '_id': ObjectId(review_id),
+                        'user._id':loginUserID
+                    }
+                }
+            });
+            res.status(200);
+            res.send(results);
         }
     })
 }
