@@ -83,7 +83,7 @@ async function main() {
     })
 
     // user signup  
-    app.post('/users', async function (req, res) {
+    app.post('/users/create', async function (req, res) {
         let email = req.body.email;
         let password = req.body.password;
         let user = await db.collection('users').findOne({
@@ -95,7 +95,20 @@ async function main() {
                 'message': "This email already has an account!"
             });
         }
-        else if (email.includes('@', '.') && password.length > 7) {
+        else if (!email.includes('@') || !email.includes('.') || password.length < 8) {
+            message = "";
+            if (!email.includes('@') || !email.includes('.')) {
+                message = message + "Email address is not valid. "
+            }
+            if (password.length < 8) {
+                message = message + "Password must be 8 or more characters."
+            }
+            res.status(400);
+            res.json({
+                'message': message
+            });
+        }
+        else {
             let newUser = {
                 "email": req.body.email,
                 "password": req.body.password,
@@ -104,19 +117,6 @@ async function main() {
             res.status(201);
             res.json({
                 'message': "New user created!"
-            });
-        }
-        else {
-            message = "";
-            if (!email.includes('@', '.')) {
-                message = message + "Email address is not valid. "
-            }
-            if (password.length <= 7) {
-                message = message + "Password must be 8 or more characters."
-            }
-            res.status(400);
-            res.json({
-                'message': message
             });
         }
     })
@@ -157,7 +157,6 @@ async function main() {
                 if (err) {
                     return res.sendStatus(403);
                 }
-
                 req.user = user;
                 next();
             });
@@ -168,24 +167,61 @@ async function main() {
 
     //check profile 
     app.get('/profile', checkIfAuthenticatedJWT, async function (req, res) {
+
         res.send(req.user);
     })
 
     //add recipe
     app.post('/recipes/create', checkIfAuthenticatedJWT, async function (req, res) {
         try {
-            let result = await db.collection('recipes').insertOne({
-                "title": req.body.title,
-                "ingredients": req.body.ingredients,
-                "course": req.body.course,
-                "cuisine": req.body.cuisine,
-                "diet": req.body.diet,
-                "serves": req.body.serves,
-                "method": req.body.method,
-                "user_id": req.user.user_id
-            });
-            res.status(201);
-            res.send(result);
+            let title = req.body.title;
+            let ingredients = req.body.ingredients;
+            let course = req.body.course;
+            let cuisine = req.body.cuisine;
+            let diet = req.body.diet;
+            let serves = Number(req.body.serves);
+            let method = req.body.method;
+            if (title.length < 4 || !Array.isArray(ingredients) || !Array.isArray(course) && course.length < 3 || cuisine.length < 3 || diet && diet.length < 3 || !Number.isInteger(serves) || !Array.isArray(method)) {
+                let message = "";
+                if (title.length < 4) {
+                    message = message + "Title must be at least 4 characters. ";
+                }
+                if (!Array.isArray(ingredients)) {
+                    message = message + "Please enter ingredients as an array. ";
+                }
+                if (!Array.isArray(course) && course.length < 3) {
+                    message = message + "Course must be at least 4 characters. ";
+                }
+                if (cuisine.length < 3) {
+                    message = message + "Cuisine must be at least 3 characters. ";
+                }
+                if (diet && diet.length < 3) {
+                    message = message + "If suitable for a certain diet, diet name must be at least 3 characters. ";
+                }
+                if (!Number.isInteger(serves)) {
+                    message = message + "Please enter a valid serving size (must be a whole number). ";
+                }
+                if (!Array.isArray(method)) {
+                    message = message + "Please enter recipe steps as an array."
+                }
+                res.status(400);
+                res.json({
+                    "message": message
+                })
+            } else {
+                let result = await db.collection('recipes').insertOne({
+                    "title": title,
+                    "ingredients": ingredients,
+                    "course": course,
+                    "cuisine": cuisine,
+                    "diet": diet,
+                    "serves": serves,
+                    "method": method,
+                    "user_id": req.user.user_id
+                });
+                res.status(201);
+                res.send(result);
+            }
         } catch (e) {
             res.status(400);
             res.json({
@@ -202,76 +238,89 @@ async function main() {
             let loginUserID = req.user.user_id;
             const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) });
             if (loginUserID == recipeRecord.user_id) {
-                let updates = {};
-                if (req.body.title) {
-                    updates['title'] = req.body.title
+                let message = ""
+                if (req.body.title && req.body.title.length < 4) {
+                    message = message + "Title must be at least 4 characters. ";
                 }
-                if (req.body.ingredients) {
-                    updates['ingredients'] = req.body.ingredients
+                if (req.body.ingredients && !Array.isArray(req.body.ingredients)) {
+                    message = message + "Please enter ingredients as an array. ";
                 }
-                if (req.body.course) {
-                    updates['course'] = req.body.course
+                if (req.body.course && !Array.isArray(req.body.course) && req.body.course.length < 3) {
+                    message = message + "Course must be at least 4 characters. ";
                 }
-                if (req.body.cuisine) {
-                    updates['cuisine'] = req.body.cuisine
+                if (req.body.cuisine && req.body.cuisine.length < 3) {
+                    message = message + "Cuisine must be at least 3 characters. ";
                 }
-                if (req.body.diet) {
-                    updates['diet'] = req.body.diet
+                if (req.body.diet && req.body.diet.length < 3) {
+                    message = message + "If suitable for a certain diet, diet name must be at least 3 characters. ";
                 }
-                if (req.body.serves) {
-                    updates['serves'] = req.body.serves
+                if (req.body.serves && !Number.isInteger(Number(req.body.serves))) {
+                    message = message + "Please enter a valid serving size (must be a whole number). ";
                 }
-                if (req.body.method) {
-                    updates['method'] = req.body.method
+                if (req.body.method && !Array.isArray(req.body.method)) {
+                    message = message + "Please enter recipe steps as an array."
                 }
-                let results = await db.collection('recipes').updateOne({
-                    '_id': ObjectId(req.params.id)
-                }, {
-                    '$set': updates
-                });
-                res.status(200);
-                res.json(results);
-            }
-            else {
-                res.status(401);
-                res.json({
-                    "message": "Unauthorised - you are not the owner of this recipe"
-                });
-            }
-        } catch (e) {
-            res.status(400);
-            res.json({
-                "message": "Error - Unable to edit this recipe"
-            });
-        }
-
-    })
-
-    //delete recipe
-    app.post('/recipes/delete/:id', checkIfAuthenticatedJWT, async function (req, res) {
-        try {
-            let id = req.params.id;
-            let loginUserID = req.user.user_id;
-            const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) });
-            if (loginUserID == recipeRecord.user_id) {
-                await db.collection('recipes').deleteOne({ '_id': ObjectId(id) })
-                res.status(200)
-                res.json({
-                    "message": "Recipe deleted!"
-                })
+                if (message != "") {
+                    res.status(400);
+                    res.json({
+                        "message": message
+                    })
+                } else{
+                    let updates = {}
+                    let fields=["title", "ingredients", "course", "cuisine","diet","serves","method"]
+                    fields.map(function(e){
+                        if (req.body[e]){
+                           return updates[e]=req.body[e]
+                        }
+                    })
+                    let results = await db.collection('recipes').updateOne({
+                        '_id': ObjectId(req.params.id)
+                    }, {
+                        '$set': updates
+                    });
+                    res.status(200);
+                    res.send(results);
+                }
             } else {
-                res.status(401)
-                res.json({
-                    "message": "Unauthorised - you are not the owner of this recipe"
-                })
-            }
-        } catch (e) {
-            res.status(400);
+            res.status(401);
             res.json({
-                "message": "Error - Unable to delete this recipe"
+                "message": "Unauthorised - you are not the owner of this recipe"
             });
         }
-    })
+    } catch (e) {
+        res.status(400);
+        res.json({
+            "message": "Error - Unable to edit this recipe"
+        });
+    }
+
+})
+
+//delete recipe
+app.post('/recipes/delete/:id', checkIfAuthenticatedJWT, async function (req, res) {
+    try {
+        let id = req.params.id;
+        let loginUserID = req.user.user_id;
+        const recipeRecord = await db.collection('recipes').findOne({ '_id': ObjectId(`${id}`) });
+        if (loginUserID == recipeRecord.user_id) {
+            await db.collection('recipes').deleteOne({ '_id': ObjectId(id) })
+            res.status(200)
+            res.json({
+                "message": "Recipe deleted!"
+            })
+        } else {
+            res.status(401)
+            res.json({
+                "message": "Unauthorised - you are not the owner of this recipe"
+            })
+        }
+    } catch (e) {
+        res.status(400);
+        res.json({
+            "message": "Error - Unable to delete this recipe"
+        });
+    }
+})
 }
 
 main();

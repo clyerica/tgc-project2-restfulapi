@@ -1,20 +1,11 @@
 {
-   "_id" : 1,
-    "title" : "Veggie laksa",
-    "ingredients" : [],
-    "course" : ["lunch", "dinner"],
-    "cuisine": "chinese",
-    "diet":["vegetarian","halal"],
-    "serves" : 2,
-    "method":"",
-    "reviews":[{
-        "_id":1,
-        "rating":5,
-        "comment":"Great recipe"
-        },
-        {
-            "_id":2,
-        "rating":3,
-        "comment":"Too much salt!"
-        }]
+    "_id":12,
+    "title": "Almond Biscotti",  
+    "ingredients": [    "250 g all-purpose flour",    "1 tsp baking powder",    "¼ tsp baking soda",    "½ tsp kosher salt",    "120 g whole almonds, roasted + skin-on",    "3 large eggs",    "175 g granulated sugar",    "1 tsp almond extract",    "½ tsp vanilla extract",    "12 oz dark chocolate, melted"  ],  
+    "course": [    "snack",    "dessert"  ],  
+    "cuisine": "italian",  
+    "diet": [    "halal",    "vegetarian"  ],  
+    "serves": 10,  
+    "method": [    "Prepare a large rimmed baking sheet with parchment paper. Spray a thin layer of nonstick spray over the parchment paper, this will aid the shaping process.",    "Preheat the oven to 350 °F.",    "Combine the flour, baking powder, baking soda, and salt in the bowl of a stand mixer. Using the paddle attachment, combine the ingredients.",    "Roughly chop the almonds, then add them to the flour mixture. Mix until well combined.",    "In a separate bowl, whisk the eggs, sugar, and the extracts together.",    "Add the wet ingredients to the dry ingredients and mix until a homogeneous dough forms, about 1 minute. The dough will be fairly wet.",    "Transfer the dough to the prepared baking sheet. Using wet hands and a bowl or bench scraper, shape the dough  into a log. The log should be about 10-11 inches long and 3-4 inches wide.",    "Bake the biscotti loaves for 25-30 minutes or until firm and lightly golden.",    "Allow the loaves to cool for 10 minutes, then transfer them to a cutting surface. Slice the loaves into ½ inch slices. *For longer biscotti, cut the slices at a diagonal.",    "Reduce the oven temperature to 300 °F.",    "Transfer the sliced biscotti back to the sheet tray and bake them for an additional 10-15 minutes. Flip each slice, then bake for a final 10-15 minutes or until completely crisp.",    "Allow the biscotti to cool completely.",    "Dip the bottoms of the biscotti in the melted dark chocolate. Transfer them, dipped side down, onto a fresh piece of parchment paper.",    "Reserve at room temperature until ready to serve with coffee or tea."  ],  
+    "user_id": "62ef62368eeefc844ffc238d"
 }
