@@ -62,13 +62,14 @@ async function main() {
             }
             if (req.query.cuisine) {
                 criteria['cuisine'] = {
-                    '$regex': req.query.cuisine, '$options': 'i'
+                    '$regex': req.query.cuisine, 
+                    '$options': 'i'
                 };
             }
             if (req.query.diet) {
                 let diet = req.query.diet.split(" ");
                 criteria['diet'] = {
-                    $all: diet
+                    '$all': diet
                 };
             }
             if (req.query.serves) {
