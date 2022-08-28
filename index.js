@@ -65,7 +65,7 @@ async function main() {
             if (req.query.diet) {
                 let diet = req.query.diet.split(" ");
                 criteria['diet'] = {
-                    '$all': [diet]
+                    $all: diet
                 };
             }
             if (req.query.serves) {
@@ -449,6 +449,6 @@ async function main() {
 main();
 
 // START SERVER
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT||3000, () => {
     console.log("Server has started");
 });
