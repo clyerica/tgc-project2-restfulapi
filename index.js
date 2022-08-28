@@ -4,7 +4,6 @@ require("dotenv").config();
 const ObjectId = require("mongodb").ObjectId;
 const MongoUtil = require("./MongoUtil");
 const jwt = require('jsonwebtoken');
-const e = require("express");
 const getUpdates = require("./getUpdates")
 
 const MONGO_URI = process.env.MONGO_URI;
@@ -17,6 +16,7 @@ async function main() {
     const db = await MongoUtil.connect(MONGO_URI, "tgc_project2");
     console.log("Connected to database");
     app.get('/', function (req, res) {
+        res.status(200);
         res.json({
             message:"Hello world! Come look at recipes!"
         });
@@ -48,7 +48,8 @@ async function main() {
             let criteria = {};
             if (req.query.title) {
                 criteria['title'] = {
-                    '$regex': req.query.title, '$options': 'i'
+                    '$regex': req.query.title, 
+                    '$options': 'i'
                 };
             }
             if (req.query.course) {
@@ -167,7 +168,8 @@ async function main() {
 
     //check profile 
     app.get('/profile', checkIfAuthenticatedJWT, async function (req, res) {
-        res.send(req.user);
+        let userRecord = await db.collection('users').findOne({ '_id': ObjectId(`${req.user.user_id}`) });
+        res.send(userRecord);
     })
 
     //add recipe
