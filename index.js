@@ -23,8 +23,10 @@ async function main() {
     })
 
     //search all
-    app.get('/recipes/all', async function (req, res) {
-        const allRecipes = await db.collection('recipes').find({}, { projection: { title: 1, cuisine: 1, diet: 1, serves: 1 } }).toArray();
+    app.get('/recipes/all/:page', async function (req, res) {
+        let page=req.params.page
+        let totalResults=10*page
+        const allRecipes = await db.collection('recipes').find({}, { projection: { title: 1, cuisine: 1, diet: 1, serves: 1 } }).limit(totalResults).toArray();
         res.status(200);
         res.send(allRecipes);
     })
@@ -292,7 +294,7 @@ async function main() {
     })
 
     //delete recipe
-    app.post('/recipes/:id/delete', checkIfAuthenticatedJWT, async function (req, res) {
+    app.delete('/recipes/:id/delete', checkIfAuthenticatedJWT, async function (req, res) {
         try {
             let id = req.params.id;
             let loginUserID = req.user.user_id;
@@ -410,7 +412,8 @@ async function main() {
                 let updates = getUpdates.updates(['title', 'rating', 'content'], "reviews.$.",req);
                 let result = await db.collection('recipes').updateOne({
                     '_id': ObjectId(recipe_id),
-                    'reviews._id': ObjectId(review_id)
+                    'reviews._id': ObjectId(review_id),
+                    'user._id': loginUserID
                 }, {
                     '$set': updates
                 })
@@ -421,7 +424,7 @@ async function main() {
     })
 
     //delete recipe review
-    app.post("/recipes/:recipeId/reviews/:reviewId/delete", checkIfAuthenticatedJWT, async function (req, res) {
+    app.delete("/recipes/:recipeId/reviews/:reviewId/delete", checkIfAuthenticatedJWT, async function (req, res) {
         let recipe_id = req.params.recipeId;
         let review_id = req.params.reviewId;
         let loginUserID = req.user.user_id;
@@ -443,7 +446,9 @@ async function main() {
                 }
             });
             res.status(200);
-            res.send(results);
+            res.json({
+                "message":"Review deleted!"
+            });
         }
     })
 }
