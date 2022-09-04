@@ -123,7 +123,7 @@ Documentation can be viewed [here](https://github.com/clyerica/tgc-project2-rest
 ## Testing
 Testing was done using [Advanced Rest Client Software](https://install.advancedrestclient.com/install).
 
-Test cases can be viewed [here](https://github.com/clyerica/tgc-project2-restfulapi/blob/main/readme%20pdfs/API%20Test%20Cases%20-%20tgcrecipeapi.pdf)/
+Test cases can be viewed [here](https://github.com/clyerica/tgc-project2-restfulapi/blob/main/readme%20pdfs/API%20Test%20Cases%20-%20tgcrecipeapi.pdf)
 
 ---
 
